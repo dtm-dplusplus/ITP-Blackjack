@@ -8,6 +8,27 @@ struct Card
 	int m_cardValue{ 0 };
 };
 
+int PlayerInput();
+void PlayerWager(int& _money, int& _bet);
+
+void DeckShuffle(Card _deck[], int _decktop);
+void DeckStart(Card _deck[], int& _decktop);
+
+void HandStart(Card _deck[], Card _hand[], int& _decktop, int& _handtop);
+void HandValue(Card _hand[], int& _handvalue, int _handtop);
+void HandPrint(Card _hand[], int _handvalue, int _handtop, int _printtype);
+void HandHit(Card _deck[], Card _hand[], int& _decktop, int& _handvalue, int& _handtop, int _hittype);
+void HandStand(Card _hand[], int _handvalue, int _handtop, int _standtype);
+
+void GameRestart(int& _playgameinput, int& _money);
+void GameResult(int& _money, int& _bet, int _gamestate);
+void GameState(int& _gamestate, int _statetype, int _playerhandvalue, int _playertop, int _dealerhandvalue, int _dealertop);
+void Game(int& _money, int& _bet, int _debug);
+
+void MenuRules();
+void Menu();
+
+
 int PlayerInput()
 {
 	char m_input[9]{};
