@@ -1,11 +1,48 @@
 #include <iostream>
 #include <iomanip>
+#include <vector>
+
+enum SuitEnum{
+	SUIT_CLUBS,
+	SUIT_DIAMONDS,
+	SUIT_HEARTS,
+	SUIT_SPADES
+};
+enum CardEnum {
+	CARD_A_MAX,
+	CARD_A_MIN,
+	CARD_2,
+	CARD_3,
+	CARD_4,
+	CARD_5,
+	CARD_6,
+	CARD_7,
+	CARD_8,
+	CARD_9,
+	CARD_10,
+	CARD_J,
+	CARD_Q,
+	CARD_K
+};
+
+constexpr static std::string SuitNames[]{ "Clubs", "Diamonds","Hearts","Spades" };
+constexpr static std::string ValueNames[]{ "Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Jack","Queen","King" };
 
 struct Card
 {
-	char m_cardSuit[9]{ 0 };
-	char m_cardName[6]{ 0 };
-	int m_cardValue{ 0 };
+	CardEnum CardID;
+	SuitEnum SuitID;
+	int Value;
+
+	void SetID(const CardEnum _id) { CardID = _id; }
+	CardEnum GetID() const { return CardID; }
+	void SetValue()
+	{
+		if (CardID >= CARD_A_MIN && CardID <= CARD_9) { Value = CardID; }
+		else if (CardID >= CARD_10) { Value = 10; }
+		else { Value = 11; }
+	} 
+	int GetValue() const { return Value; }
 };
 
 int PlayerInput();
@@ -94,8 +131,8 @@ void DeckShuffle(Card _deck[], int _decktop)
 }
 void DeckStart(Card _deck[], int& _decktop)
 {
-	char m_cardValueName[][6]{ "Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Jack","Queen","King" };
-	char m_cardSuitName[][9]{ "Hearts", "Diamonds", "Clubs","Spades" };
+	char m_cardValueName[][6];
+	char m_cardSuitName[][9];
 
 	//Process: Assign deck values
 	for (int suit{ 0 }, suitMin{ 0 }; suit < 4; suit++, suitMin += 13)
