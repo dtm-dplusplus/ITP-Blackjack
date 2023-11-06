@@ -1,20 +1,34 @@
 #include "CardHolder.h"
 
-CardHolder::CardHolder(CardDeck*& _deck) : HandValue{ 0 }, HandTop{ -1 }, Deck(_deck)
+
+CardHolder::CardHolder(std::shared_ptr<CardDeck> _deck) : HandValue{ 0 }, HandTop{ -1 }, Deck(_deck)
 {
 	for (int i{ 0 }; i < 2; i++) Hand[++HandTop] = Deck->DrawCard();
 };
 
+int CardHolder::Decision()
+{
+	int decision;
 
-void CardHolder::Decision()
-{}
+	for (int valid{ INVALID }; valid == INVALID; )
+	{
+		std::cout << "1. Hit \n2. Stand" << std::endl;
+
+		decision = PlayerInput();
+
+		if (decision == ACTION_HIT) valid = true;
+	}
+
+	if (decision == ACTION_HIT) std::cout << CardHolderName << "Hit" << std::endl;
+	else std::cout << CardHolderName << "Stand" << std::endl;
+
+	return (PlayerAction)decision;
+}
 
 void CardHolder::Hit()
 {
-	std::cout << CardHolderName << " hits" << std::endl;
-
 	Hand[++HandTop] = Deck->DrawCard();
-	std::cout << CardHolderName << " drawed: " << Hand[HandTop]->GetCardName()<< std::endl; PrintHand();
+	std::cout << CardHolderName << " new card: " << Hand[HandTop]->GetCardName()<< std::endl; 
 }
 
 void CardHolder::Stand() const
@@ -22,49 +36,73 @@ void CardHolder::Stand() const
 	std::cout << CardHolderName << " stands" << std::endl;
 }
 
-void CardHolder::PrintHand()
+bool CardHolder::CheckBust()
 {
-	for(const Card* card : Hand)
-	{
-		std::cout << card->GetCardName() << std::endl;
-	}
+	if (GetHandValue() > BLACJACK) return true;
+	else return false;
 }
 
-Dealer::Dealer(CardDeck*& _deck): CardHolder(_deck)
+bool CardHolder::CheckBlackJack()
+{
+	if (GetHandValue() == BLACJACK) return true;
+	else return false;
+}
+
+
+
+void CardHolder::PrintHand()
+{
+	for (int i{ 0 }; i <= HandTop; i++) std::cout << Hand[i]->GetCardName() << std::endl;
+}
+
+int CardHolder::GetHandValue()
+{
+	HandValue = 0;
+	for (int i{ 0 }; i <= HandTop; i++) HandValue += Hand[i]->GetValue();
+	return HandValue;
+}
+
+
+Dealer::Dealer(std::shared_ptr<CardDeck> _deck): CardHolder(_deck)
 {
 	CardHolderName = "Dealer";
 }
 
-
-void Dealer::Decision()
+int Dealer::Decision()
 {
+	if (GetHandValue() < DEALER_HIT) return ACTION_HIT;
+	else return ACTION_STAND;
+}
 
+void Dealer::PrintHand()
+{
+	std::cout << CardHolderName << " cards" << std::endl;
+	for (int i{ 0 }; i < HandTop; i++) std::cout << Hand[i]->GetCardName() << std::endl;
+	std::cout << "XXXXX of XXXXX" << std::endl;
 }
 
 
-Player::Player(CardDeck*& _deck) : CardHolder(_deck), BetAmount{0}, MoneyPot{ 100 }
+Player::Player(std::shared_ptr<CardDeck> _deck) : CardHolder(_deck), BetAmount{0}, MoneyPot{ 100 }
 {
 	CardHolderName = "Player";
 }
 
-void Player::Decision()
+void Player::Bet()
 {
-	// Hit or Stand
-	
-}
+	int newBetAmount;
 
-bool Player::Bet()
-{
-	// Get Bet Input
-	int bet{ 0 };
-
-	// Check Bet Input valid
-	if(bet > MoneyPot)
+	for (bool valid{ false }; !valid;)
 	{
-		std::cout << "You don't have enough money to bet that much" << std::endl;
-		return false;
+		std::cout << "You have " << POUND(MoneyPot) << "" << std::endl;
+		std::cout << "Place a bet: " << std::endl;
+		newBetAmount = PlayerInput();
+
+		// Check Bet Input valid
+		if (newBetAmount <= MoneyPot && newBetAmount >= MIN_BET) valid = true;
+		else if (newBetAmount == INVALID) std::cout << "Invalid Bet" << std::endl;
+		else std::cout << "You don't have enough money" << std::endl;
 	}
 
-	BetAmount = bet;
-	return true;
+	BetAmount = newBetAmount;
+	MoneyPot -= BetAmount;
 }

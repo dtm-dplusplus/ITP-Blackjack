@@ -7,15 +7,18 @@ class Game
 {
 public:
 	Game();
-	~Game();
 
+	GameState GetState() const { return State; }
+
+	void Menu();
+	void StartGame();
 	void PlayGame();
+	void EndGame();
+
 private:
-	CardDeck* Deck;
-	Player* Player;
-	Dealer* Dealer;
+	std::shared_ptr<CardDeck> Deck;
+	std::unique_ptr<Player> Player;
+	std::unique_ptr<Dealer> Dealer;
 
-	static void GameState();
-	static void GameResult();
-
+	GameState State;
 };

@@ -1,166 +1,115 @@
 #include "Game.h"
 
-#define POUND(m) char(156) << m
 
 Game::Game()
 {
-	Deck = new CardDeck();
-	Player = new ::Player(Deck);
-	Dealer = new ::Dealer(Deck);
+	// Initialise Card Deck and card holder hands
+	Deck = std::make_shared<CardDeck>();
+	Player = std::make_unique<::Player>(Deck);
+	Dealer = std::make_unique<::Dealer>(Deck);
+	State = GAME_PLAY;
 }
 
-Game::~Game()
+void Game::Menu()
 {
-	delete Deck;
-	delete Player;
-	delete Dealer;
+	std::cout << "Welcome to Blackjack!" << std::endl;
+
+}
+
+void Game::StartGame()
+{
+	State = GAME_PLAY;
+	// Set game wager
+	Player->Bet();
+	Player->PrintHand();
+	Dealer->PrintHand();
+	if (Player->CheckBlackJack())
+	{
+		State = GAME_WIN;
+		std::cout << "BLACKJACK!" << std::endl;
+	}
 }
 
 void Game::PlayGame()
 {
-	std::cout << "Welcome to Blackjack!" << std::endl;
-	std::cout << Player->GetCardHolderName() << " has " << POUND(Player->GetMoneyPot()) << " in their pot" << std::endl;
+	// Get Player Decision - hit or stand
+	if (Player->Decision() == ACTION_HIT)
+	{
+		Player->Hit();
+
+		if (Player->CheckBust())
+		{
+			State = GAME_LOOSE;
+			return;
+		}
+	}
+	else // ACTION_STAND
+	{
+		Player->Stand();
+
+		if (Player->GetHandValue() < BLACJACK) State = GAME_LOOSE;
+		else if (Player->GetHandValue() == Dealer->GetHandValue()) State = GAME_DRAW;
+		else State = GAME_WIN;
+		return;
+	}
+
+	// Get Dealer Decision - hit or stand
+	if (Dealer->Decision() == ACTION_HIT)
+	{
+		Dealer->Hit();
+
+		if (Dealer->CheckBust())
+		{
+			State = GAME_WIN;
+			return;
+		}
+	}
+	else // ACTION_STAND
+	{
+		Dealer->Stand();
+
+		if (Dealer->GetHandValue() < BLACJACK) State = GAME_LOOSE;
+		else if (Dealer->GetHandValue() == Dealer->GetHandValue()) State = GAME_DRAW;
+		else State = GAME_WIN;
+		return;
+	}
+}
 	
-
-
-	// Set game wager
-
-	// Initialise CardDeck of Cards
-
-	// Initialise Player & Dealer hand + values
-	//Process: Game Loop
-		// Player Hand = Blackjack?
-
-		//Output: Player + Dealer Hand
-
-		//Proccess: Player Hit or Stand?
-
-		//Proccess: Dealer Actions
-
-		//Proccess: If Player Stand, Result?
-
-	//Output: Final Hands
-
-
-	//Process: Calculate Game Results & Update Money Pot
-}
-
-void Game::GameState()
+void Game::EndGame()
 {
-	//switch (_statetype)
-	//{
-	//	//Process: Player/Dealer Bust?
-	//case 0:
-	//{
-	//	if (_playerhandvalue > 21)
-	//	{
-	//		_gamestate = 0;
-	//		std::cout << "Your bust!" << std::endl;
-	//		std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//	}
-	//	else
-	//	{
-	//		if (_dealerhandvalue > 21)
-	//		{
-	//			_gamestate = 1;
-	//			std::cout << "Showdown! Dealer bust" << std::endl;
-	//			std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//		}
-	//	}
-	//}
-	//break;
+	Player->PrintHand();
+	Dealer->CardHolder::PrintHand();
 
-	////Process: Player Stand Result
-	//case 1:
-	//{
-	//	if (_playerhandvalue > _dealerhandvalue)
-	//	{
-	//		_gamestate = 1;
-	//		std::cout << "Your hand is stronger than the dealers" << std::endl;
-	//	}
-	//	else
-	//	{
-	//		if (_playerhandvalue == _dealerhandvalue)
-	//		{
-	//			_gamestate = 2;
-	//			std::cout << "You draw with Dealer" << std::endl;
-	//		}
-	//		else
-	//		{
-	//			_gamestate = 0;
-	//			std::cout << "Dealers hand is stronger than yours" << std::endl;
-	//			if (_dealerhandvalue == 21) { std::cout << "Blackjack! Dealer wins" << std::endl; }
-	//		}
-	//	}
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//}
-	//break;
 
-	////Process: Player Hand = Blackjack?
-	//case 2:
-	//{
-	//	if (_playertop == 1 && _playerhandvalue == 21)
-	//	{
-	//		if (_dealertop = 1 && _dealerhandvalue == 21)
-	//		{
-	//			_gamestate = 2;
-	//			std::cout << "Dealer & Player drew Blackjack!" << std::endl;
-	//		}
-	//		else
-	//		{
-	//			_gamestate = 1;
-	//			std::cout << "You have Blackjack!" << std::endl;
-	//		}
-	//	}
-	//}
-	//break;
-	//}
-}
+	switch (State)
+	{
+		//Process: Player Loose
+	case GAME_LOOSE:
+	{
+		std::cout << "You lost your bet: " << POUND(Player->GetBetAmount()) << std::endl;
+	}
+	break;
 
-void Game::GameResult()
-{
-	//switch (_gamestate)
-	//{
-	//	//Process: Player Loose
-	//case 0:
-	//{
-	//	_money -= _bet;
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//	std::cout << "You lost your bet: " << char(156) << _bet << std::endl;
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//}
-	//break;
+	//Process: Player Win
+	case GAME_WIN:
+	{
+		int reward = Player->GetBetAmount() * 2;
+		Player->GetMoneyPot() += reward;
+		std::cout << "You won double your bet: " << POUND(reward) << std::endl;
+	}
+	break;
 
-	////Process: Player Win
-	//case 1:
-	//{
-	//	_money += (_bet * 2);
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//	std::cout << "You won double your bet: " << char(156) << (_bet * 2) << std::endl;
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//}
-	//break;
+	//Process: Player Draw
+	case GAME_DRAW:
+	{
+		std::cout << "Your drawed with the dealer. Your bet: " << POUND(Player->GetBetAmount()) << " has been returned" << std::endl;
+	}
+	break;
 
-	////Process: Player Draw
-	//case 2:
-	//{
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//	std::cout << "Your bet of " << char(156) << _bet << " has been returned" << std::endl;
-	//	std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//}
-	//break;
-
-	//default:
-	//{
-	//	std::cout << "Game winnings error." << std::endl;
-	//}
-	//break;
-	//}
-
-	//std::cout << "Your Pot value: " << char(156) << _money << std::endl;
-	//std::cout << std::setw(70) << std::setfill('-') << "" << std::endl;
-	//if (_money < 5)
-	//{
-	//	std::cout << "You are broke! Less than " << char(156) << "5 in your pot" << std::endl;
-	//}
+	default:
+	{
+		std::cout << "Game winnings error." << std::endl;
+	}
+	break;
+	}
 }
